@@ -139,6 +139,7 @@ class LogStash::Outputs::InfluxDB < LogStash::Outputs::Base
     
     time  = timestamp_at_precision(event.timestamp, @time_precision.to_sym)
     point = create_point_from_event(event)
+    remove_missing_fields_from_point!(point)
 
     if point.has_key?('time')
       unless @allow_time_override
@@ -235,6 +236,10 @@ class LogStash::Outputs::InfluxDB < LogStash::Outputs::Base
     Hash[ (@use_event_fields_for_data_points ? event.to_hash : @data_points).map do |k,v| 
       [event.sprintf(k), (String === v ? event.sprintf(v) : v)] 
     end ]
+  end
+
+  def remove_missing_fields_from_point!(point)
+      point.delete_if{|_, v| String === v and v[0] == "%"}
   end
   
 
